@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "bootstrap": "^4.4.1",
-    "jquery": "^3.7.1"
+    "chai": "^4.3.10",
+    "jquery": "^3.7.1",
+    "mocha": "^10.2.0"
   }
 }
