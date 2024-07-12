@@ -10,8 +10,9 @@ const incomeStatement=`https://financialmodelingprep.com/api/v3/income-statement
 const companyProfile=`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${API_KEY}`;
 const cashFlowStatement=`https://financialmodelingprep.com/api/v3/cash-flow-statement/${symbol}?period=annual&apikey=${API_KEY}`;
 const executivesDetails = `https://financialmodelingprep.com/api/v3/key-executives/${symbol}?apikey=${API_KEY}`
+const dividendPayout = `https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/${symbol}?apikey=${API_KEY}`
 
-//Grab "0" in "Dividends Historical" for dividend payouts 
+//Grab "" in "Dividends Historical" for dividend payouts 
 //Grab "totalCurrentAssets" current assets/ "totalLiabilities" total liabilities in Balance Sheet Statements
 
 fetch(incomeStatement)
@@ -83,11 +84,18 @@ fetch(companyProfile)
       console.log(`CEO has been in position for at least 10 years: ${differenceExec >= differenceTenYears}`)
     })
 
+  fetch(dividendPayout)
+    .then((response) => response.json())
+    .then((data) => {
+      const dividendPay = data.historical[0].dividend;
+      const
+      console.log(`Company has a positive dividend payout: ${dividendPay > '0'}`)
+    })
 
 
 /* Plan for this screener:
   XXXX Domestic Stock
-  2. Positive dividend payout
+  XXXX Positive dividend payout
   XXXX Before taxes profit margin is over .19
   4. Current assets/total liabilities are over or equal to 1
   XXXX Average free cashflow growth rate over last 5 years is over .05 by calculating as such:
