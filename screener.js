@@ -11,9 +11,19 @@ const companyProfile=`https://financialmodelingprep.com/api/v3/profile/${symbol}
 const cashFlowStatement=`https://financialmodelingprep.com/api/v3/cash-flow-statement/${symbol}?period=annual&apikey=${API_KEY}`;
 const executivesDetails = `https://financialmodelingprep.com/api/v3/key-executives/${symbol}?apikey=${API_KEY}`
 const dividendPayout = `https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/${symbol}?apikey=${API_KEY}`
+const balanceSheet = `https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=annual&apikey=${API_KEY}`
 
-//Grab "" in "Dividends Historical" for dividend payouts 
 //Grab "totalCurrentAssets" current assets/ "totalLiabilities" total liabilities in Balance Sheet Statements
+
+
+fetch(balanceSheet)
+  .then((response) => response.json())
+  .then((data) => {
+    const totalCurrentAssets = (data[0].totalCurrentAssets)
+    const totalLiabilities = (data[0].totalLiabilities)
+    console.log(`Total current assets over total liabilities is over 1: ${(totalCurrentAssets/totalLiabilities) > 1}`)
+  })
+
 
 fetch(incomeStatement)
   .then((response) => response.json())
@@ -36,7 +46,7 @@ fetch(incomeStatement)
     // Calculate the average growth rate
     let totalGrowthRate = growthRates.reduce((a, b) => a + b, 0);
     let averageGrowthRate = totalGrowthRate / growthRates.length;
-
+  
     console.log(`Average revenue growth over the last five years has been positive: ${averageGrowthRate > 0}`);
   })
 
@@ -88,7 +98,6 @@ fetch(companyProfile)
     .then((response) => response.json())
     .then((data) => {
       const dividendPay = data.historical[0].dividend;
-      const
       console.log(`Company has a positive dividend payout: ${dividendPay > '0'}`)
     })
 
@@ -122,5 +131,78 @@ fetch(companyProfile)
   Other research - Managmeent that focuses on owners
 
   
+
+*/
+
+/*
+
+// Data (state)
+let companies = [] // Collection of symbols/companies starts as empty
+
+async function fetchCompaniesList() {
+    const response = await fetch("http://localhost:3000/symbols")
+    const fetchedSymbols = await response.json()
+    companies = fetchedSymbols
+    renderCompanies()
+}
+
+fetchCompaniesList()
+
+const companiesContainer = document.getElementById("company-container")
+
+function renderCompanies() {
+    companiesContainer.innerHTML = ""
+    for (let i = 0; i < companies.length; i++) {
+        const deleteCompany = async () => {
+        await fetch("http://localhost:3000/symbols/" + companies[i].id, {
+            method: "DELETE"
+        })
+        companies.splice(i,1)
+        renderCompanies()
+    }
+}
+
+const div = document.createElement("div")
+div.className = "border bg-light p-3 m-3"
+div.innerHTML = `
+    <h3>${companies[i].symbol}</h3>
+    <h4>Income Statement - Income Before Taxes Ratio</h4>
+    <button class="btn btn-secondary mb-3" id="incomeBeforeTaxesBtn">Pending...</button>
+    <br>
+    <button class="btn btn-danger">Delete</button>
+`
+div.querySelector("button").addEventListener("click, deleteCompany")
+companiesContainer.append(div)
+
+}
+
+// Function "symbolPull" used to create variable coSymbol which is the symbol input into the HTML
+// document.
+function createSymbol(symbol) {
+    let form = document.getElementById("symbolForm")
+    let coSymbol = form.elements["symbol"].value;
+    return coSymbol;
+}
+
+// "onFetchIncomeStatementClick" called from the "click" that would fetch the symbol and await the 
+// fetch fetch Income Statement below of the above symbol (and wait for the results).
+const onFetchIncomeStatementClick = async () => {
+    let symbol = symbolPull();
+    await fetchIncomeStatement(symbol)
+}
+
+// Async function "fetchIncomeStatement" created that uses the symbol passed to it to then pull the income statement
+async function fetchIncomeStatement(symbol) {
+    const response = await fetch(`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=annual&apikey=${API_KEY}`)
+    const data = await response.json()
+    const incomeBeforeTaxRatio = (data[0].incomeBeforeTaxRatio)
+    if(incomeBeforeTaxRatio >= .20) {
+    document.getElementById("incomeBeforeTaxesBtn").className = "btn btn-success";
+    document.getElementById("incomeBeforeTaxesBtn").innerHTML = "Pass"
+    } else {
+    document.getElementById("incomeBeforeTaxesBtn").className = "btn btn-danger";
+    document.getElementById("incomeBeforeTaxesBtn").innerHTML = "Fail"
+    }
+}
 
 */
