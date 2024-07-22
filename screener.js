@@ -1,10 +1,84 @@
-const API_KEY = 'D6h5NxSkHrccYbhOa7m6ZuXDgltfNZuJ';
 
-let symbol = prompt(`Input Symbol:`)
-let rate = prompt('Current 10-year Treasury Note Rate: ')
-//Input into a table on the browser the top five companies of each industry. 
-//Change those companies to "symbol" to be input into the script.
+let companyList = []
 
+//Input into the website on the browser the top five companies of each industry. 
+
+function renderCompanyList() {
+  companiesContainer.innerHTML = ""
+  for (let i = 0; i < companyList.length; i++) {
+      const deleteCompany = async (id) => {
+          await fetch("http://localhost:3000/companies/" + id, {
+              method: "DELETE"
+          })
+          const index = companyList.findIndex(company => company.id === id);
+          companyList.splice(index, 1)
+          renderCompanyList()
+      }
+      const div = document.createElement("div")
+      div.className = "border bg-light p-3 m-3"
+      div.innerHTML = `
+          <h3>${companyList[i].company}</h3>
+          <p>${companyList[i].symbol}</p>
+          <p>Income before Taxes Ratio is higher than 20%</p>
+          <button class="btn btn-danger">Delete</button>
+          <button class="btn btn-secondary incomeBeforeTaxesBtn">Processing...</button>
+      `
+      div.querySelector(".btn-danger").addEventListener("click", () => deleteCompany(companyList[i].id))
+      companiesContainer.append(div)
+  }
+  fetchIncomeBeforeTaxesRatio(companyList)
+}
+
+async function fetchCompanyList() {
+  const response = await fetch("http://localhost:3000/companies")
+  const fetchedCompanies = await response.json()
+  companyList = fetchedCompanies
+  renderCompanyList()
+}
+fetchCompanyList()
+
+async function fetchIncomeBeforeTaxesRatio(companyList) {
+  for (let i = 0; i < companyList.length; i++) {
+    const response = await fetch(`https://financialmodelingprep.com/api/v3/income-statement/${companyList[i].symbol}?period=annual&apikey=${API_KEY}`)
+    const data = await response.json()
+    const incomeBeforeTaxRatio = (data[0].incomeBeforeTaxRatio)
+    const buttons = document.getElementsByClassName("incomeBeforeTaxesBtn");
+      if(incomeBeforeTaxRatio >= .20) {
+      buttons[i].className = "btn btn-success incomeBeforeTaxesBtn";
+      buttons[i].innerHTML = "Pass"
+      } else {
+      buttons[i].className = "btn btn-danger incomeBeforeTaxesBtn";
+      buttons[i].innerHTML = "Fail"
+        }
+  }
+}
+
+const companiesContainer = document.getElementById("companies-container")
+const companyInput = document.getElementById("company-input")
+const symbolInput = document.getElementById("symbol-input")
+   
+async function createCompany(event) {
+    event.preventDefault()
+    const newCompanyData = {
+        company: companyInput.value,
+        symbol: symbolInput.value
+    }
+    companyInput.value = ""
+    symbolInput.value = ""
+    const response = await fetch("http://localhost:3000/companies", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCompanyData)
+    })
+    const createdCompanyWithId = await response.json()
+    companyList.push(createdCompanyWithId)
+
+    renderCompanyList()
+}
+
+/*
 
 const incomeStatement=`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=annual&apikey=${API_KEY}`;
 const companyProfile=`https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${API_KEY}`;
@@ -13,7 +87,6 @@ const executivesDetails = `https://financialmodelingprep.com/api/v3/key-executiv
 const dividendPayout = `https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/${symbol}?apikey=${API_KEY}`
 const balanceSheet = `https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=annual&apikey=${API_KEY}`
 
-//Grab "totalCurrentAssets" current assets/ "totalLiabilities" total liabilities in Balance Sheet Statements
 
 
 fetch(balanceSheet)
@@ -37,13 +110,11 @@ fetch(incomeStatement)
   .then((data) => {
     let growthRates = [];
 
-    // Calculate the growth rate for each year
     for (let i = 0; i < data.length - 1; i++) {
       let growthRate = (data[i].revenue - data[i + 1].revenue) / data[i + 1].revenue;
       growthRates.push(growthRate);
     }
 
-    // Calculate the average growth rate
     let totalGrowthRate = growthRates.reduce((a, b) => a + b, 0);
     let averageGrowthRate = totalGrowthRate / growthRates.length;
   
@@ -70,13 +141,11 @@ fetch(companyProfile)
   .then((data) => {
     let growthRates = [];
 
-    // Calculate the Free Cashflow growth rate for each year
     for (let i = 0; i < Math.min(data.length - 1, 4); i++) {
       let growthRate = (data[i].freeCashFlow - data[i + 1].freeCashFlow) / data[i + 1].freeCashFlow;
       growthRates.push(growthRate);
     }
 
-    // Calculate the average free cashflow growth rate over the last 10 years
     let totalGrowthRate = growthRates.reduce((a, b) => a + b, 0);
     let averageGrowthRate = totalGrowthRate / growthRates.length;
 
@@ -102,7 +171,11 @@ fetch(companyProfile)
     })
 
 
-/* Plan for this screener:
+/* 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Plan for this screener:
   XXXX Domestic Stock
   XXXX Positive dividend payout
   XXXX Before taxes profit margin is over .19
@@ -128,7 +201,7 @@ fetch(companyProfile)
   Not part of screener:
   Use other screener to find top 5 in an industry
   Value line- Industry to last a long time (high rated in Value Line analysis)
-  Other research - Managmeent that focuses on owners
+  Other research - Management that focuses on owners
 
   
 
@@ -136,73 +209,23 @@ fetch(companyProfile)
 
 /*
 
-// Data (state)
-let companies = [] // Collection of symbols/companies starts as empty
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-async function fetchCompaniesList() {
-    const response = await fetch("http://localhost:3000/symbols")
-    const fetchedSymbols = await response.json()
-    companies = fetchedSymbols
-    renderCompanies()
-}
-
-fetchCompaniesList()
-
-const companiesContainer = document.getElementById("company-container")
-
-function renderCompanies() {
-    companiesContainer.innerHTML = ""
-    for (let i = 0; i < companies.length; i++) {
-        const deleteCompany = async () => {
-        await fetch("http://localhost:3000/symbols/" + companies[i].id, {
-            method: "DELETE"
-        })
-        companies.splice(i,1)
-        renderCompanies()
-    }
-}
-
-const div = document.createElement("div")
-div.className = "border bg-light p-3 m-3"
-div.innerHTML = `
-    <h3>${companies[i].symbol}</h3>
-    <h4>Income Statement - Income Before Taxes Ratio</h4>
-    <button class="btn btn-secondary mb-3" id="incomeBeforeTaxesBtn">Pending...</button>
-    <br>
-    <button class="btn btn-danger">Delete</button>
-`
-div.querySelector("button").addEventListener("click, deleteCompany")
-companiesContainer.append(div)
-
-}
-
-// Function "symbolPull" used to create variable coSymbol which is the symbol input into the HTML
-// document.
+Code to add into the top coding for functionality
+NOT NEEDED:
 function createSymbol(symbol) {
     let form = document.getElementById("symbolForm")
     let coSymbol = form.elements["symbol"].value;
     return coSymbol;
 }
 
-// "onFetchIncomeStatementClick" called from the "click" that would fetch the symbol and await the 
-// fetch fetch Income Statement below of the above symbol (and wait for the results).
 const onFetchIncomeStatementClick = async () => {
     let symbol = symbolPull();
     await fetchIncomeStatement(symbol)
 }
 
-// Async function "fetchIncomeStatement" created that uses the symbol passed to it to then pull the income statement
-async function fetchIncomeStatement(symbol) {
-    const response = await fetch(`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=annual&apikey=${API_KEY}`)
-    const data = await response.json()
-    const incomeBeforeTaxRatio = (data[0].incomeBeforeTaxRatio)
-    if(incomeBeforeTaxRatio >= .20) {
-    document.getElementById("incomeBeforeTaxesBtn").className = "btn btn-success";
-    document.getElementById("incomeBeforeTaxesBtn").innerHTML = "Pass"
-    } else {
-    document.getElementById("incomeBeforeTaxesBtn").className = "btn btn-danger";
-    document.getElementById("incomeBeforeTaxesBtn").innerHTML = "Fail"
-    }
-}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+NEEDED:
+
 
 */

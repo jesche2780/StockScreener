@@ -3,16 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Stock Research Page</title>
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
 </head>
-<body class="container">
-    <br>
-    <div>
+<body>
+    <div class="m-3">
+        <h1>Stock Analysis</h1>
+        <form>
+            <h4>New Company</h4>
+            <label class="form-label">Company</label>
+            <input id="company-input" type="text" class="form-control" />
+            <label class="form-label">Symbol</label>
+            <input id="symbol-input" type="text" class="form-control" />
+            <button class="btn btn-success mt-3" onclick="createCompany(event)">Create</button>
+        </form>
+        <div id="companies-container" style="padding: 25px;"></div>
     </div>
+    <script src="API_key.js"></script>
     <script src="screener.js"></script>
-    <script src="node_modules/jquery/dist/jquery.js"></script>
-    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
 </body>
 </html>
 
@@ -43,5 +51,34 @@
 
 
 </body>
+</html>
+-->
+
+<!-- FUNCTIONAL ADAPTIVE COMPANY/SYMBOL SHELL HTML <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <title>Company and Coordinating Stock Market Symbols</title>
+</head>
+
+<body>
+    <div class="m-3">
+        <h2>List of companies with corresponding stock market symbols.</h2>
+        <form>
+            <h4>New Company</h4>
+            <label class="form-label">Company</label>
+            <input id="company-input" type="text" class="form-control" />
+            <label class="form-label">Symbol</label>
+            <input id="symbol-input" type="text" class="form-control" />
+            <button class="btn btn-success mt-3" onclick="createCompany(event)">Create</button>
+        </form>
+        <div id="companies-container" style="padding: 25px;"></div>
+    </div>
+    <script src="index.js"></script>
+</body>
+
 </html>
 -->
