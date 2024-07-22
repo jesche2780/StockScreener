@@ -19,14 +19,26 @@ function renderCompanyList() {
       div.innerHTML = `
           <h3>${companyList[i].company}</h3>
           <p>${companyList[i].symbol}</p>
-          <p>Income before Taxes Ratio is higher than 20%</p>
           <button class="btn btn-danger">Delete</button>
+          <hr class="hr" />
+          <p>Income before Taxes Ratio is higher than 20%</p>
           <button class="btn btn-secondary incomeBeforeTaxesBtn">Processing...</button>
+          <br>
+          <br>
+          <p>Current Assets over Total Liabilities is higher than 1</p>
+          <button class="btn btn-secondary assetsOverLiabBtn">Processing...</button>
+          <br>
+          <br>
+          <p>Positive average revenue growth over the last 5 years<p>
+          <button class="btn btn-secondary revenueGrowthBtn">Processing...</button>
+          <br>
       `
       div.querySelector(".btn-danger").addEventListener("click", () => deleteCompany(companyList[i].id))
       companiesContainer.append(div)
   }
   fetchIncomeBeforeTaxesRatio(companyList)
+  fetchCurrentAssetOverLiab(companyList)
+  revenueGrowthOverFiveYears(companyList)
 }
 
 async function fetchCompanyList() {
@@ -52,6 +64,46 @@ async function fetchIncomeBeforeTaxesRatio(companyList) {
         }
   }
 }
+
+async function fetchCurrentAssetOverLiab(companyList) {
+  for (let i = 0; i < companyList.length; i++) {
+    const response = await fetch (`https://financialmodelingprep.com/api/v3/balance-sheet-statement/${companyList[i].symbol}?period=annual&apikey=${API_KEY}`)
+    const data = await response.json()
+    const totalCurrentAssets = (data[0].totalCurrentAssets)
+    const totalLiabilities = (data[0].totalLiabilities)
+    const buttons = document.getElementsByClassName("assetsOverLiabBtn");
+      if((totalCurrentAssets/totalLiabilities) > 1) {
+        buttons[i].className = "btn btn-success assetsOverLiabBtn";
+        buttons[i].innerHTML = "Pass"
+        } else {
+        buttons[i].className = "btn btn-danger assetsOverLiabBtn";
+        buttons[i].innerHTML = "Fail"
+      }    
+  }
+}
+
+async function revenueGrowthOverFiveYears(companyList) {
+  for (let i = 0; i < companyList.length; i++) {
+    const response = await fetch (`https://financialmodelingprep.com/api/v3/income-statement/${companyList[i].symbol}?period=annual&apikey=${API_KEY}`)
+    const data = await response.json()
+    let growthRates = [];
+    for (let i = 0; i < data.length - 1; i++) {
+      let growthRate = (data[i].revenue - data[i + 1].revenue) / data[i + 1].revenue;
+      growthRates.push(growthRate);
+    }
+    let totalGrowthRate = growthRates.reduce((a, b) => a + b, 0);
+    let averageGrowthRate = totalGrowthRate / growthRates.length;
+    const buttons = document.getElementsByClassName("revenueGrowthBtn")
+      if(averageGrowthRate > 0) {
+        buttons[i].className = "btn btn-success revenueGrowthBtn";
+        buttons[i].innerHTML = "Pass"
+        } else {
+        buttons[i].className = "btn btn-danger revenueGrowthBtn";
+        buttons[i].innerHTML = "Fail"
+      }
+  }
+}
+
 
 const companiesContainer = document.getElementById("companies-container")
 const companyInput = document.getElementById("company-input")
@@ -86,41 +138,6 @@ const cashFlowStatement=`https://financialmodelingprep.com/api/v3/cash-flow-stat
 const executivesDetails = `https://financialmodelingprep.com/api/v3/key-executives/${symbol}?apikey=${API_KEY}`
 const dividendPayout = `https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/${symbol}?apikey=${API_KEY}`
 const balanceSheet = `https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=annual&apikey=${API_KEY}`
-
-
-
-fetch(balanceSheet)
-  .then((response) => response.json())
-  .then((data) => {
-    const totalCurrentAssets = (data[0].totalCurrentAssets)
-    const totalLiabilities = (data[0].totalLiabilities)
-    console.log(`Total current assets over total liabilities is over 1: ${(totalCurrentAssets/totalLiabilities) > 1}`)
-  })
-
-
-fetch(incomeStatement)
-  .then((response) => response.json())
-  .then((data) => {
-    const incomeOverRevenue = (data[0].incomeBeforeTaxRatio)
-  console.log(`Income before taxes over revenue is at least 20%: ${incomeOverRevenue > .19}`)
-  })
-
-fetch(incomeStatement)
-  .then((response) => response.json())
-  .then((data) => {
-    let growthRates = [];
-
-    for (let i = 0; i < data.length - 1; i++) {
-      let growthRate = (data[i].revenue - data[i + 1].revenue) / data[i + 1].revenue;
-      growthRates.push(growthRate);
-    }
-
-    let totalGrowthRate = growthRates.reduce((a, b) => a + b, 0);
-    let averageGrowthRate = totalGrowthRate / growthRates.length;
-  
-    console.log(`Average revenue growth over the last five years has been positive: ${averageGrowthRate > 0}`);
-  })
-
 
 fetch(companyProfile)
   .then((response) => response.json())
@@ -176,12 +193,12 @@ fetch(companyProfile)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Plan for this screener:
-  XXXX Domestic Stock
-  XXXX Positive dividend payout
-  XXXX Before taxes profit margin is over .19
-  4. Current assets/total liabilities are over or equal to 1
-  XXXX Average free cashflow growth rate over last 5 years is over .05 by calculating as such:
-    XXXX Averaging the growth rate for each year over a 5 year period.
+  1. Domestic Stock
+  2. Positive dividend payout
+  XXXX Before taxes profit margin is over .20
+  XXXX Current assets/total liabilities are over or equal to 1
+  5 Average free cashflow growth rate over last 5 years is over .05 by calculating as such:
+    - Averaging the growth rate for each year over a 5 year period.
   6. Current Price/Safe intrinsic value is under 70 AND Safe intrinsic value greater than 0.
     ~ Safe Intrinsic value calculated by (1 - Margin of safety(50%)) multiplied by Intrinsic value per share 
       * Intrinsic value per share calculated by total intrinsic value/Total shares outstanding
@@ -193,8 +210,8 @@ Plan for this screener:
             (making sure to change any starting negatives for free cashflow to positive free cashflow once growth starts).
               - Growth rate is calculated by taking the last 20 years' free cash flow growth between each year and conducting an average that removes the 33% outliers from the dataset
             - current free cash flow is calculated by using the most recent free cash flow reported amount
-  XXXX IPO > 25 years
-  XXXX CEO > 10 years
+  7. IPO > 25 years
+  8. CEO > 10 years
   XXXX Positive average revenue growth - 5 years
 
 
@@ -202,30 +219,5 @@ Plan for this screener:
   Use other screener to find top 5 in an industry
   Value line- Industry to last a long time (high rated in Value Line analysis)
   Other research - Management that focuses on owners
-
-  
-
-*/
-
-/*
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Code to add into the top coding for functionality
-NOT NEEDED:
-function createSymbol(symbol) {
-    let form = document.getElementById("symbolForm")
-    let coSymbol = form.elements["symbol"].value;
-    return coSymbol;
-}
-
-const onFetchIncomeStatementClick = async () => {
-    let symbol = symbolPull();
-    await fetchIncomeStatement(symbol)
-}
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-NEEDED:
-
 
 */
